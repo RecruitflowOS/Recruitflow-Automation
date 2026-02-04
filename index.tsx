@@ -302,7 +302,7 @@ const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate
     
     const top10 = candidates.slice(0, 10);
     const reportContent = 
-      "TOP 10 CANDIDATE REPORT - AI ENGINEERING LEAD CAMPAIGN\n" +
+      "TOP 10 CANDIDATE REPORT - APPRENTICESHIP PROGRAM - FREIGHT FORWARDING\n" +
       "====================================================\n\n" +
       top10.map((c, i) => 
         `RANK #${i+1}: ${c.full_name}\n` +
@@ -357,7 +357,7 @@ const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Campaign: AI Engineering Lead</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Apprenticeship Program - Freight Forwarding</h1>
           <p className="text-slate-500 mt-1">Sorting by highest AI score (Total Score DESC)</p>
         </div>
         <button 
@@ -840,15 +840,7 @@ const App = () => {
               className={`w-full flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all ${currentView === 'dashboard' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
             >
               <LayoutDashboard className="w-5 h-5 mr-3" />
-              Dashboard
-            </button>
-            <button className="w-full flex items-center px-4 py-3 text-sm font-bold rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
-              <Users className="w-5 h-5 mr-3" />
-              Qualified Leads
-            </button>
-            <button className="w-full flex items-center px-4 py-3 text-sm font-bold rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
-              <BarChart3 className="w-5 h-5 mr-3" />
-              Reports
+              Campaigns
             </button>
           </nav>
         </div>
