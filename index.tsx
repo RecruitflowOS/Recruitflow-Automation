@@ -8,6 +8,7 @@ import {
   FileText, 
   Download, 
   ChevronRight, 
+  ChevronLeft,
   Search, 
   Filter, 
   ArrowLeft, 
@@ -24,7 +25,11 @@ import {
   Loader2,
   AlertCircle,
   RefreshCw,
-  FileSearch
+  FileSearch,
+  Minus,
+  Plus,
+  RotateCcw,
+  Maximize
 } from 'lucide-react';
 
 // --- Supabase Client Initialization ---
@@ -444,6 +449,10 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
   const [loadingUrl, setLoadingUrl] = useState(false);
   const [urlError, setUrlError] = useState<string | null>(null);
   const [resolvedPath, setResolvedPath] = useState<string | null>(null);
+  
+  // PDF Navigation State
+  const [pdfPage, setPdfPage] = useState(1);
+  const [zoomLevel, setZoomLevel] = useState(100);
 
   useEffect(() => {
     let isMounted = true;
@@ -453,81 +462,109 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
       setLoadingUrl(true);
       setUrlError(null);
       setResolvedPath(null);
+      setPdfPage(1); 
+      setZoomLevel(100); 
       
-      let targetPath = candidate.resume_path;
+      const bucketName = 'resumes';
+      const originalPath = candidate.resume_path;
+      // Aggressive strip: remove "resumes/" prefix if present to handle DB paths like "resumes/file.pdf"
+      const cleanPath = originalPath.replace(/^resumes\//, '');
       
-      console.log(`[ResumeFetch] Initial path: "${targetPath}"`);
+      let targetPath = cleanPath;
+      let finalViewUrl: string | null = null;
+      let finalDownloadUrl: string | null = null;
+      let fetchError: string | null = null;
+
+      console.log(`[ResumeFetch] Starting resolution. Original="${originalPath}", Clean="${cleanPath}"`);
 
       try {
-        // --- STEP 1: Attempt direct fetch ---
-        // Try to get the signed URL directly. 
-        let { data: viewData } = await supabase.storage
-          .from('resumes')
-          .createSignedUrls([targetPath], 3600);
+        // --- Strategy 1: Direct Fetch (Clean Path) ---
+        // This is the most likely scenario where DB has "resumes/file.pdf" but storage has "file.pdf"
+        const { data: directData } = await supabase.storage
+          .from(bucketName)
+          .createSignedUrls([cleanPath], 3600);
 
-        // --- STEP 2: Smart Recovery (If direct fetch fails) ---
-        // If the direct fetch returned an error (file not found), try to find the "real" filename
-        if (viewData && viewData[0] && viewData[0].error) {
-          console.warn(`[ResumeFetch] Direct fetch failed: ${viewData[0].error}. Attempting smart recovery...`);
-          
-          // List files in the bucket to find a match
-          // Note: limiting to 100 files for performance, adjust if bucket is huge
-          const { data: fileList, error: listError } = await supabase.storage
-            .from('resumes')
-            .list('', { limit: 100, sortBy: { column: 'name', order: 'asc' } });
-
-          if (!listError && fileList) {
-             // Create a "normalized" version of the target path for comparison
-             // Remove special chars, spaces, convert to lower case
-             const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9.]/g, '');
-             const targetNormalized = normalize(targetPath);
-
-             // Find a file that matches roughly
-             const match = fileList.find(f => normalize(f.name) === targetNormalized);
-
-             if (match) {
-                console.log(`[ResumeFetch] Smart recovery found match! "${targetPath}" -> "${match.name}"`);
-                targetPath = match.name; // Update target path to the real file name found in storage
-                
-                // Retry fetching with the corrected path
-                const { data: retryData } = await supabase.storage
-                  .from('resumes')
-                  .createSignedUrls([targetPath], 3600);
-                  
-                viewData = retryData;
-             } else {
-                console.warn(`[ResumeFetch] No fuzzy match found for ${targetPath}`);
-             }
-          }
+        if (directData && directData[0] && !directData[0].error) {
+           console.log('[ResumeFetch] Success with clean path.');
+           finalViewUrl = directData[0].signedUrl;
+        } else {
+           console.warn('[ResumeFetch] Clean path failed. Trying original...');
+           
+           // --- Strategy 2: Direct Fetch (Original Path) ---
+           // Fallback in case the file actually resides in a subfolder "resumes/"
+           if (cleanPath !== originalPath) {
+               const { data: originalData } = await supabase.storage
+                 .from(bucketName)
+                 .createSignedUrls([originalPath], 3600);
+                 
+               if (originalData && originalData[0] && !originalData[0].error) {
+                   console.log('[ResumeFetch] Success with original path.');
+                   targetPath = originalPath;
+                   finalViewUrl = originalData[0].signedUrl;
+               }
+           }
         }
 
-        // --- STEP 3: Generate URLs with final resolved path ---
-        if (isMounted) {
-            setResolvedPath(targetPath); // Store the actual working path for download buttons
+        // --- Strategy 3: Deep Search (List bucket with search param) ---
+        // If exact paths fail, search for the filename in the bucket
+        if (!finalViewUrl) {
+            console.warn('[ResumeFetch] Direct fetches failed. Attempting deep search...');
+            
+            // Search for the filename specifically
+            const searchName = cleanPath.split('/').pop() || cleanPath;
+            
+            const { data: searchResults, error: searchError } = await supabase.storage
+              .from(bucketName)
+              .list('', { 
+                  limit: 10, 
+                  search: searchName 
+              });
 
-            // Check View URL result
-            if (viewData && viewData[0]) {
-               if (viewData[0].error) {
-                 console.error('[ResumeFetch] Final Error:', viewData[0].error);
-                 setUrlError(viewData[0].error);
-               } else {
-                 setViewUrl(viewData[0].signedUrl);
-               }
+            if (!searchError && searchResults && searchResults.length > 0) {
+                // Find exact match or take first result
+                const match = searchResults.find(f => f.name === searchName) || searchResults[0];
+                console.log(`[ResumeFetch] Deep search found: "${match.name}"`);
+                
+                targetPath = match.name;
+                const { data: signedData } = await supabase.storage
+                  .from(bucketName)
+                  .createSignedUrls([match.name], 3600);
+                  
+                if (signedData && signedData[0] && !signedData[0].error) {
+                    finalViewUrl = signedData[0].signedUrl;
+                } else {
+                    fetchError = signedData?.[0]?.error || "Failed to sign discovered file";
+                }
+            } else {
+                console.error('[ResumeFetch] Deep search returned no results.', searchError);
+                fetchError = "File not found in storage (Deep Search failed)";
             }
+        }
 
-            // Generate Download URL with the (potentially corrected) path
-            const { data: downloadData } = await supabase.storage
-              .from('resumes')
+        // --- Generate Download URL for whatever path worked ---
+        if (finalViewUrl) {
+            const { data: dlData } = await supabase.storage
+              .from(bucketName)
               .createSignedUrls([targetPath], 3600, { download: true });
-              
-            if (downloadData && downloadData[0] && !downloadData[0].error) {
-               setDownloadUrl(downloadData[0].signedUrl);
+            
+            if (dlData && dlData[0] && !dlData[0].error) {
+                finalDownloadUrl = dlData[0].signedUrl;
+            }
+        }
+
+        if (isMounted) {
+            if (finalViewUrl) {
+                setResolvedPath(targetPath);
+                setViewUrl(finalViewUrl);
+                setDownloadUrl(finalDownloadUrl);
+            } else {
+                setUrlError(fetchError || "Resume not accessible");
             }
         }
 
       } catch (err: any) {
         console.error("[ResumeFetch] Critical Exception:", err);
-        if (isMounted) setUrlError(err.message || "Failed to generate secure link");
+        if (isMounted) setUrlError(err.message || "Unexpected error");
       } finally {
         if (isMounted) setLoadingUrl(false);
       }
@@ -541,7 +578,6 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
     if (downloadUrl) {
       const link = document.createElement('a');
       link.href = downloadUrl;
-      // Use the resolved path (real filename) for the download
       const filename = resolvedPath ? resolvedPath.split('/').pop() : 'Resume.pdf';
       link.setAttribute('download', filename || 'Resume.pdf');
       document.body.appendChild(link);
@@ -552,8 +588,6 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
 
   const handleReportDownload = () => {
     if (!candidate.reports) return;
-    
-    // Create a blob from the text content and trigger download
     const element = document.createElement("a");
     const file = new Blob([candidate.reports], {type: 'text/plain'});
     element.href = URL.createObjectURL(file);
@@ -562,6 +596,14 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
     element.click();
     document.body.removeChild(element);
   };
+
+  // --- Zoom & Page Handlers ---
+  const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 25, 200));
+  const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 25, 50));
+  const handleZoomReset = () => setZoomLevel(100);
+  
+  const handlePageNext = () => setPdfPage(prev => prev + 1);
+  const handlePagePrev = () => setPdfPage(prev => Math.max(prev - 1, 1));
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
@@ -630,32 +672,77 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
 
         {/* Resume Preview */}
         <div className="lg:w-2/3">
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm h-[800px] flex flex-col">
-            <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-              <h3 className="text-sm font-bold text-slate-700 flex items-center uppercase tracking-wide">
-                Candidate Resume Preview
-              </h3>
-              <div className="flex items-center space-x-3">
-                {resolvedPath && resolvedPath !== candidate.resume_path && (
-                   <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full flex items-center font-medium" title={`Original: ${candidate.resume_path}`}>
-                      <FileSearch className="w-3 h-3 mr-1" />
-                      Auto-Resolved
-                   </span>
-                )}
-                {viewUrl && (
+          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm h-[800px] flex flex-col relative">
+            
+            {/* Toolbar */}
+             <div className="bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-between shadow-sm z-10 shrink-0 h-12">
+               <div className="flex items-center space-x-1">
+                 <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mr-3 hidden sm:block">Preview</h3>
+                 <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
+                    <button 
+                      onClick={handlePagePrev} 
+                      disabled={pdfPage <= 1}
+                      className="p-1 hover:bg-white rounded-md text-slate-500 hover:text-indigo-600 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+                      title="Previous Page"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <span className="text-xs font-mono font-bold text-slate-700 w-12 text-center select-none">
+                      Page {pdfPage}
+                    </span>
+                    <button 
+                       onClick={handlePageNext}
+                       className="p-1 hover:bg-white rounded-md text-slate-500 hover:text-indigo-600 transition-all"
+                       title="Next Page"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                 </div>
+               </div>
+
+               <div className="flex items-center space-x-2">
+                 <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
+                    <button 
+                      onClick={handleZoomOut}
+                      className="p-1 hover:bg-white rounded-md text-slate-500 hover:text-indigo-600 transition-all"
+                      title="Zoom Out"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="text-xs font-mono font-bold text-slate-700 w-12 text-center select-none">
+                      {zoomLevel}%
+                    </span>
+                    <button 
+                      onClick={handleZoomIn}
+                      className="p-1 hover:bg-white rounded-md text-slate-500 hover:text-indigo-600 transition-all"
+                      title="Zoom In"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                 </div>
+                 <button 
+                   onClick={handleZoomReset}
+                   className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-700 transition-colors"
+                   title="Reset Zoom"
+                 >
+                   <RotateCcw className="w-3.5 h-3.5" />
+                 </button>
+                 <div className="w-px h-4 bg-slate-200 mx-1"></div>
+                 {viewUrl && (
                   <a 
                     href={viewUrl} 
                     target="_blank" 
                     rel="noopener noreferrer" 
-                    className="text-xs font-bold text-indigo-600 flex items-center hover:underline"
+                    className="text-slate-400 hover:text-indigo-600 transition-colors p-1"
+                    title="Open in New Tab"
                   >
-                    Open in New Tab
-                    <ExternalLink className="w-3.5 h-3.5 ml-1" />
+                    <ExternalLink className="w-4 h-4" />
                   </a>
                 )}
-              </div>
+               </div>
             </div>
-            <div className="flex-1 bg-slate-100">
+
+            <div className="flex-1 bg-slate-100 overflow-auto relative">
               {loadingUrl ? (
                  <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
                     <Loader2 className="w-8 h-8 animate-spin mb-2" />
@@ -675,11 +762,22 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
                   </div>
                 </div>
               ) : viewUrl ? (
-                <iframe 
-                  src={`${viewUrl}#toolbar=0`} 
-                  className="w-full h-full border-none" 
-                  title="PDF Preview" 
-                />
+                <div 
+                   className="mx-auto transition-all duration-200 ease-out origin-top"
+                   style={{ 
+                     width: `${zoomLevel}%`, 
+                     minHeight: '100%',
+                     // If zoom > 100, standard browsers will scale the content to fit width
+                   }}
+                >
+                  <iframe 
+                    // Add URL params for page and disable toolbar (we use ours)
+                    // Added view=FitH to force horizontal fit which works well with container width zooming
+                    src={`${viewUrl}#page=${pdfPage}&view=FitH&toolbar=0&navpanes=0&scrollbar=0`} 
+                    className="w-full h-full min-h-[800px] border-none shadow-lg" 
+                    title="PDF Preview" 
+                  />
+                </div>
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
                    <p className="text-sm font-medium">No resume document available.</p>
