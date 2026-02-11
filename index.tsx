@@ -2,19 +2,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
-import { 
-  LayoutDashboard, 
-  Users, 
-  FileText, 
-  Download, 
-  ChevronRight, 
+import {
+  LayoutDashboard,
+  Users,
+  FileText,
+  Download,
+  ChevronRight,
   ChevronLeft,
-  Search, 
-  Filter, 
-  ArrowLeft, 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
+  Search,
+  Filter,
+  ArrowLeft,
+  CheckCircle2,
+  XCircle,
+  Clock,
   LogOut,
   Mail,
   Phone,
@@ -29,7 +29,10 @@ import {
   Minus,
   Plus,
   RotateCcw,
-  Maximize
+  Maximize,
+  MapPin,
+  Briefcase,
+  Globe
 } from 'lucide-react';
 
 // --- Supabase Client Initialization ---
@@ -53,8 +56,11 @@ interface Candidate {
   experience_score: number;
   cultural_fit_score: number;
   summary: string;
-  resume_path: string | null; // Mapped from 'cv_file_name' in DB, can be null
-  reports?: string;    // Mapped from 'report' in DB
+  resume_path: string | null; // Mapped from 'resume_url' in DB
+  reports?: string;           // Mapped from 'screening_report' in DB
+  position_applied?: string;  // Role the candidate applied for
+  nationality?: string;
+  current_city?: string;
 }
 
 // --- Components ---
@@ -250,37 +256,40 @@ const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate
   const fetchCandidates = async () => {
     setLoading(true);
     setError(null);
-    
-    // Fetch all columns to handle mapping in code
-    // Ordering by 'score' as seen in DB schema (was 'total_score' in original types)
+
+    // campaign_candidates table — columns prefixed with 'screening_'
     const { data, error } = await supabase
-      .from('candidates')
+      .from('campaign_candidates')
       .select('*')
-      .order('score', { ascending: false });
-    
+      .order('screening_score', { ascending: false });
+
     if (error) {
       console.error('Fetch error:', error);
       setError(error.message);
     } else if (data) {
-      // MAP DATABASE COLUMNS TO FRONTEND INTERFACE
+      // MAP campaign_candidates COLUMNS TO FRONTEND INTERFACE
       const mappedCandidates: Candidate[] = data.map((item: any) => ({
         id: item.id,
         full_name: item.full_name,
         email: item.email || 'N/A',
         phone: item.phone || 'N/A',
-        // Map 'score' from DB to 'total_score'
-        total_score: item.score ?? 0,
-        // Normalize Status (handle 'unqualified' lowercase from DB)
-        status: normalizeStatus(item.status),
-        // Map 'cv_file_name' from DB to 'resume_path'
-        resume_path: item.cv_file_name ? item.cv_file_name.trim() : null,
-        // Map 'report' (singular) from DB to 'reports' (plural in type)
-        reports: item.report,
-        summary: item.summary || 'No summary available.',
-        // Use total score for sub-scores if specific columns missing in DB view
-        skills_score: item.score ?? 0,
-        experience_score: item.score ?? 0,
-        cultural_fit_score: item.score ?? 0,
+        // 'screening_score' → total_score
+        total_score: item.screening_score ?? 0,
+        // 'screening_status' → status (stored capitalised; normalizeStatus handles both cases)
+        status: normalizeStatus(item.screening_status),
+        // 'resume_url' → resume_path (strip 'resumes/' bucket-name prefix if present)
+        resume_path: item.resume_url ? item.resume_url.trim() : null,
+        // 'screening_report' → reports
+        reports: item.screening_report,
+        // 'screening_summary' → summary
+        summary: item.screening_summary || 'No summary available.',
+        skills_score: item.screening_score ?? 0,
+        experience_score: item.screening_score ?? 0,
+        cultural_fit_score: item.screening_score ?? 0,
+        // Additional campaign_candidates fields
+        position_applied: item.position_applied || undefined,
+        nationality: item.nationality || undefined,
+        current_city: item.current_city || undefined,
       }));
       setCandidates(mappedCandidates);
     }
@@ -301,16 +310,18 @@ const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate
     if (candidates.length === 0) return;
     
     const top10 = candidates.slice(0, 10);
-    const reportContent = 
-      "TOP 10 CANDIDATE REPORT - APPRENTICESHIP PROGRAM - FREIGHT FORWARDING\n" +
+    const reportContent =
+      "TOP 10 CANDIDATE REPORT\n" +
       "====================================================\n\n" +
-      top10.map((c, i) => 
+      top10.map((c, i) =>
         `RANK #${i+1}: ${c.full_name}\n` +
         `Total Score: ${c.total_score}%\n` +
         `Status: ${c.status}\n` +
+        (c.position_applied ? `Position Applied: ${c.position_applied}\n` : '') +
         `Email: ${c.email}\n` +
         `Phone: ${c.phone}\n` +
-        `Scores: Tech ${c.skills_score} | Exp ${c.experience_score} | Culture ${c.cultural_fit_score}\n` +
+        (c.nationality ? `Nationality: ${c.nationality}\n` : '') +
+        (c.current_city ? `Current City: ${c.current_city}\n` : '') +
         `Summary: ${c.summary}\n` +
         `----------------------------------------------------\n`
       ).join('\n');
@@ -399,7 +410,10 @@ const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-bold text-slate-900">{candidate.full_name}</div>
-                        <div className="text-xs text-slate-500 font-medium uppercase tracking-tight">ID_{candidate.id.slice(0,6)}</div>
+                        {candidate.position_applied
+                          ? <div className="text-xs text-indigo-500 font-medium truncate max-w-[180px]">{candidate.position_applied}</div>
+                          : <div className="text-xs text-slate-500 font-medium uppercase tracking-tight">ID_{candidate.id.slice(0,6)}</div>
+                        }
                       </div>
                     </div>
                   </td>
@@ -624,6 +638,36 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
                 <h2 className="text-xl font-bold text-slate-900 leading-tight">{candidate.full_name}</h2>
                 <StatusBadge status={candidate.status} />
               </div>
+            </div>
+
+            {/* Contact & Role Details */}
+            <div className="space-y-2 mb-6 border-b border-slate-100 pb-6">
+              {candidate.position_applied && (
+                <div className="flex items-start text-sm text-slate-700">
+                  <Briefcase className="w-3.5 h-3.5 mr-2 mt-0.5 text-indigo-500 shrink-0" />
+                  <span className="font-medium">{candidate.position_applied}</span>
+                </div>
+              )}
+              <div className="flex items-center text-sm text-slate-600">
+                <Mail className="w-3.5 h-3.5 mr-2 text-slate-400 shrink-0" />
+                {candidate.email}
+              </div>
+              <div className="flex items-center text-sm text-slate-600">
+                <Phone className="w-3.5 h-3.5 mr-2 text-slate-400 shrink-0" />
+                {candidate.phone}
+              </div>
+              {candidate.current_city && (
+                <div className="flex items-center text-sm text-slate-600">
+                  <MapPin className="w-3.5 h-3.5 mr-2 text-slate-400 shrink-0" />
+                  {candidate.current_city}
+                </div>
+              )}
+              {candidate.nationality && (
+                <div className="flex items-center text-sm text-slate-600">
+                  <Globe className="w-3.5 h-3.5 mr-2 text-slate-400 shrink-0" />
+                  {candidate.nationality}
+                </div>
+              )}
             </div>
 
             <div className="space-y-6">
