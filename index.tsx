@@ -21,7 +21,6 @@ import {
   ExternalLink,
   Award,
   BarChart3,
-  ShieldCheck,
   Loader2,
   AlertCircle,
   RefreshCw,
@@ -154,9 +153,7 @@ const LoginPage = () => {
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center mb-6">
-          <div className="bg-indigo-600 p-3 rounded-xl shadow-lg shadow-indigo-200">
-            <ShieldCheck className="w-10 h-10 text-white" />
-          </div>
+          <img src="./public/logo.png" alt="Refrane Logo" className="h-20 w-auto rounded-xl shadow-lg" />
         </div>
         <h2 className="text-center text-3xl font-extrabold text-slate-900">
           {isSignUp ? 'Create Account' : 'Recruiter Portal'}
@@ -368,7 +365,7 @@ const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Apprenticeship Program - Freight Forwarding</h1>
+          <h1 className="text-2xl font-bold text-slate-900">MA Construction Personnel list</h1>
           <p className="text-slate-500 mt-1">Sorting by highest AI score (Total Score DESC)</p>
         </div>
         <button 
@@ -866,16 +863,37 @@ const App = () => {
     return <LoginPage />;
   }
 
+  if (user.email !== 'moconstruction@gmail.com') {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-xl border border-slate-100 p-10 max-w-md w-full text-center">
+          <div className="mb-4 text-rose-500">
+            <AlertCircle className="w-12 h-12 mx-auto" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Access Denied</h2>
+          <p className="text-slate-500 text-sm mb-6">
+            This portal is restricted. You are signed in as <span className="font-semibold text-slate-700">{user.email}</span>, which does not have access.
+          </p>
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="w-full flex items-center justify-center px-4 py-3 text-sm font-bold text-white bg-rose-500 hover:bg-rose-600 rounded-xl transition-colors"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar */}
       <aside className="w-64 bg-slate-900 text-white hidden xl:flex flex-col flex-shrink-0">
         <div className="p-8">
           <div className="flex items-center space-x-3 mb-10">
-            <div className="bg-indigo-600 p-2 rounded-lg">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <span className="text-xl font-black tracking-tight">AI-RECRUIT</span>
+            <img src="./public/logo.png" alt="Refrane Logo" className="h-10 w-auto rounded-lg" />
+            <span className="text-xl font-black tracking-tight">Recruitflow</span>
           </div>
 
           <nav className="space-y-1">
