@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 import {
@@ -153,7 +153,7 @@ const LoginPage = () => {
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center mb-6">
-          <img src="./public/logo.png" alt="Refrane Logo" className="h-20 w-auto rounded-xl shadow-lg" />
+          <img src="/logo.png" alt="Recruitflow" className="h-20 w-auto rounded-xl shadow-lg object-contain" />
         </div>
         <h2 className="text-center text-3xl font-extrabold text-slate-900">
           {isSignUp ? 'Create Account' : 'Recruiter Portal'}
@@ -245,68 +245,90 @@ const LoginPage = () => {
   );
 };
 
+const ITEMS_PER_PAGE = 10;
+
+const normalizeStatus = (dbStatus: string): QualificationStatus => {
+  if (!dbStatus) return 'Pending';
+  const lower = dbStatus.toLowerCase();
+  if (lower === 'qualified') return 'Qualified';
+  if (lower === 'unqualified') return 'Unqualified';
+  return 'Pending';
+};
+
+const mapCandidate = (item: any): Candidate => ({
+  id: item.id,
+  full_name: item.full_name,
+  email: item.email || 'N/A',
+  phone: item.phone || 'N/A',
+  total_score: item.screening_score ?? 0,
+  status: normalizeStatus(item.screening_status),
+  resume_path: item.resume_url ? item.resume_url.trim() : null,
+  reports: item.screening_report,
+  summary: item.screening_summary || 'No summary available.',
+  skills_score: item.screening_score ?? 0,
+  experience_score: item.screening_score ?? 0,
+  cultural_fit_score: item.screening_score ?? 0,
+  position_applied: item.position_applied || undefined,
+  nationality: item.nationality || undefined,
+  current_city: item.current_city || undefined,
+});
+
 const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate) => void }) => {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pageLoading, setPageLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const tableRef = useRef<HTMLDivElement>(null);
 
-  const fetchCandidates = async () => {
-    setLoading(true);
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+  const startItem = totalCount === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const endItem = Math.min(currentPage * ITEMS_PER_PAGE, totalCount);
+
+  const fetchCandidates = async (page: number = 1) => {
+    page === 1 ? setLoading(true) : setPageLoading(true);
     setError(null);
 
-    // campaign_candidates table — columns prefixed with 'screening_'
-    const { data, error } = await supabase
+    const from = (page - 1) * ITEMS_PER_PAGE;
+    const to = from + ITEMS_PER_PAGE - 1;
+
+    const { data, error, count } = await supabase
       .from('campaign_candidates')
-      .select('*')
-      .order('screening_score', { ascending: false });
+      .select('*', { count: 'exact' })
+      .order('screening_score', { ascending: false })
+      .range(from, to);
 
     if (error) {
       console.error('Fetch error:', error);
       setError(error.message);
     } else if (data) {
-      // MAP campaign_candidates COLUMNS TO FRONTEND INTERFACE
-      const mappedCandidates: Candidate[] = data.map((item: any) => ({
-        id: item.id,
-        full_name: item.full_name,
-        email: item.email || 'N/A',
-        phone: item.phone || 'N/A',
-        // 'screening_score' → total_score
-        total_score: item.screening_score ?? 0,
-        // 'screening_status' → status (stored capitalised; normalizeStatus handles both cases)
-        status: normalizeStatus(item.screening_status),
-        // 'resume_url' → resume_path (strip 'resumes/' bucket-name prefix if present)
-        resume_path: item.resume_url ? item.resume_url.trim() : null,
-        // 'screening_report' → reports
-        reports: item.screening_report,
-        // 'screening_summary' → summary
-        summary: item.screening_summary || 'No summary available.',
-        skills_score: item.screening_score ?? 0,
-        experience_score: item.screening_score ?? 0,
-        cultural_fit_score: item.screening_score ?? 0,
-        // Additional campaign_candidates fields
-        position_applied: item.position_applied || undefined,
-        nationality: item.nationality || undefined,
-        current_city: item.current_city || undefined,
-      }));
-      setCandidates(mappedCandidates);
+      setCandidates(data.map(mapCandidate));
+      if (count !== null) setTotalCount(count);
     }
     setLoading(false);
+    setPageLoading(false);
   };
 
-  const normalizeStatus = (dbStatus: string): QualificationStatus => {
-    if (!dbStatus) return 'Pending';
-    const lower = dbStatus.toLowerCase();
-    if (lower === 'qualified') return 'Qualified';
-    if (lower === 'unqualified') return 'Unqualified';
-    return 'Pending';
+  useEffect(() => { fetchCandidates(1); }, []);
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages || page === currentPage) return;
+    setCurrentPage(page);
+    fetchCandidates(page);
+    tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  useEffect(() => { fetchCandidates(); }, []);
+  const handleDownloadTop10 = async () => {
+    const { data } = await supabase
+      .from('campaign_candidates')
+      .select('*')
+      .order('screening_score', { ascending: false })
+      .limit(10);
 
-  const handleDownloadTop10 = () => {
-    if (candidates.length === 0) return;
-    
-    const top10 = candidates.slice(0, 10);
+    if (!data || data.length === 0) return;
+
+    const top10 = data.map(mapCandidate);
     const reportContent =
       "TOP 10 CANDIDATE REPORT\n" +
       "====================================================\n\n" +
@@ -322,7 +344,7 @@ const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate
         `Summary: ${c.summary}\n` +
         `----------------------------------------------------\n`
       ).join('\n');
-      
+
     const blob = new Blob([reportContent], { type: 'text/plain' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -332,6 +354,20 @@ const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
+  };
+
+  const getPageNumbers = (): (number | '...')[] => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    const pages: (number | '...')[] = [1];
+    if (currentPage > 3) pages.push('...');
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (currentPage < totalPages - 2) pages.push('...');
+    pages.push(totalPages);
+    return pages;
   };
 
   if (loading) return (
@@ -351,8 +387,8 @@ const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate
         Unable to load candidates. This is likely due to missing database permissions (RLS) for your account.
         <br/><span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded mt-2 inline-block text-rose-500">{error}</span>
       </p>
-      <button 
-        onClick={fetchCandidates}
+      <button
+        onClick={() => fetchCandidates(1)}
         className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition-colors"
       >
         <RefreshCw className="w-4 h-4 mr-2" />
@@ -366,11 +402,15 @@ const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">MA Construction Personnel list</h1>
-          <p className="text-slate-500 mt-1">Sorting by highest AI score (Total Score DESC)</p>
+          <p className="text-slate-500 mt-1">
+            {totalCount > 0
+              ? `Showing ${startItem}–${endItem} of ${totalCount} candidates · Sorted by highest AI score`
+              : 'Sorting by highest AI score (Total Score DESC)'}
+          </p>
         </div>
-        <button 
+        <button
           onClick={handleDownloadTop10}
-          disabled={candidates.length === 0}
+          disabled={totalCount === 0}
           className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold text-sm hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Download className="w-4 h-4 mr-2" />
@@ -378,8 +418,8 @@ const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
+      <div ref={tableRef} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div className={`overflow-x-auto transition-opacity duration-200 ${pageLoading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
           <table className="min-w-full divide-y divide-slate-200">
             <thead className="bg-slate-50">
               <tr>
@@ -392,63 +432,122 @@ const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate
             </thead>
             <tbody className="bg-white divide-y divide-slate-200">
               {candidates.length === 0 ? (
-                 <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm">
-                      No candidates found in this campaign.
-                    </td>
-                 </tr>
-              ) : (
-                candidates.map((candidate) => (
-                <tr key={candidate.id} className="hover:bg-slate-50 transition-colors group">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="h-10 w-10 flex-shrink-0 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold border border-indigo-100">
-                        {candidate.full_name.charAt(0)}
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-bold text-slate-900">{candidate.full_name}</div>
-                        {candidate.position_applied
-                          ? <div className="text-xs text-indigo-500 font-medium truncate max-w-[180px]">{candidate.position_applied}</div>
-                          : <div className="text-xs text-slate-500 font-medium uppercase tracking-tight">ID_{candidate.id.slice(0,6)}</div>
-                        }
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-slate-900 flex items-center mb-1">
-                      <Mail className="w-3.5 h-3.5 mr-2 text-slate-400" />
-                      {candidate.email}
-                    </div>
-                    <div className="text-xs text-slate-500 flex items-center">
-                      <Phone className="w-3.5 h-3.5 mr-2 text-slate-400" />
-                      {candidate.phone}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex flex-col items-center">
-                      <span className="text-sm font-bold text-indigo-600">{candidate.total_score}%</span>
-                      <div className="w-24 bg-slate-100 rounded-full h-1.5 mt-1 overflow-hidden">
-                        <div className="h-full rounded-full bg-indigo-600" style={{ width: `${candidate.total_score}%` }}></div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusBadge status={candidate.status} />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button 
-                      onClick={() => onSelectCandidate(candidate)}
-                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-bold rounded-lg text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors"
-                    >
-                      View Profile
-                      <ChevronRight className="ml-1 w-4 h-4" />
-                    </button>
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm">
+                    No candidates found in this campaign.
                   </td>
                 </tr>
-              )))}
+              ) : (
+                candidates.map((candidate) => (
+                  <tr key={candidate.id} className="hover:bg-slate-50 transition-colors group">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 flex-shrink-0 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold border border-indigo-100">
+                          {candidate.full_name.charAt(0)}
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-bold text-slate-900">{candidate.full_name}</div>
+                          {candidate.position_applied
+                            ? <div className="text-xs text-indigo-500 font-medium truncate max-w-[180px]">{candidate.position_applied}</div>
+                            : <div className="text-xs text-slate-500 font-medium uppercase tracking-tight">ID_{candidate.id.slice(0,6)}</div>
+                          }
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-slate-900 flex items-center mb-1">
+                        <Mail className="w-3.5 h-3.5 mr-2 text-slate-400" />
+                        {candidate.email}
+                      </div>
+                      <div className="text-xs text-slate-500 flex items-center">
+                        <Phone className="w-3.5 h-3.5 mr-2 text-slate-400" />
+                        {candidate.phone}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-col items-center">
+                        <span className="text-sm font-bold text-indigo-600">{candidate.total_score}%</span>
+                        <div className="w-24 bg-slate-100 rounded-full h-1.5 mt-1 overflow-hidden">
+                          <div className="h-full rounded-full bg-indigo-600" style={{ width: `${candidate.total_score}%` }}></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <StatusBadge status={candidate.status} />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => onSelectCandidate(candidate)}
+                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-bold rounded-lg text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors"
+                      >
+                        View Profile
+                        <ChevronRight className="ml-1 w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Footer */}
+        {totalCount > 0 && (
+          <div className="px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-sm text-slate-500 order-2 sm:order-1">
+              Showing{' '}
+              <span className="font-semibold text-slate-700">{startItem}</span>–<span className="font-semibold text-slate-700">{endItem}</span>
+              {' '}of{' '}
+              <span className="font-semibold text-slate-700">{totalCount}</span> candidates
+              {pageLoading && <Loader2 className="inline w-3.5 h-3.5 animate-spin ml-2 text-indigo-500" />}
+            </p>
+
+            {totalPages > 1 && (
+              <nav className="flex items-center space-x-1 order-1 sm:order-2" aria-label="Pagination">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1 || pageLoading}
+                  aria-label="Previous page"
+                  className="flex items-center px-3 py-1.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Prev
+                </button>
+
+                {getPageNumbers().map((page, idx) =>
+                  page === '...' ? (
+                    <span key={`ell-${idx}`} className="px-2 text-sm text-slate-400 select-none">…</span>
+                  ) : (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page as number)}
+                      disabled={pageLoading}
+                      aria-label={`Page ${page}`}
+                      aria-current={page === currentPage ? 'page' : undefined}
+                      className={`w-9 h-9 text-sm font-semibold rounded-lg transition-all ${
+                        page === currentPage
+                          ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-200 cursor-default'
+                          : 'text-slate-600 bg-white border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200'
+                      } disabled:opacity-50`}
+                    >
+                      {page}
+                    </button>
+                  )
+                )}
+
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages || pageLoading}
+                  aria-label="Next page"
+                  className="flex items-center px-3 py-1.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </button>
+              </nav>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -892,7 +991,7 @@ const App = () => {
       <aside className="w-64 bg-slate-900 text-white hidden xl:flex flex-col flex-shrink-0">
         <div className="p-8">
           <div className="flex items-center space-x-3 mb-10">
-            <img src="./public/logo.png" alt="Refrane Logo" className="h-10 w-auto rounded-lg" />
+            <img src="/logo.png" alt="Recruitflow" className="h-10 w-auto rounded-lg object-contain" />
             <span className="text-xl font-black tracking-tight">Recruitflow</span>
           </div>
 
