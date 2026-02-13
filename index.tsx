@@ -585,8 +585,6 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
       let finalDownloadUrl: string | null = null;
       let fetchError: string | null = null;
 
-      console.log(`[ResumeFetch] Starting resolution. Original="${originalPath}", Clean="${cleanPath}"`);
-
       try {
         // --- Strategy 1: Direct Fetch (Clean Path) ---
         // This is the most likely scenario where DB has "resumes/file.pdf" but storage has "file.pdf"
@@ -595,7 +593,6 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
           .createSignedUrls([cleanPath], 3600);
 
         if (directData && directData[0] && !directData[0].error) {
-           console.log('[ResumeFetch] Success with clean path.');
            finalViewUrl = directData[0].signedUrl;
         } else {
            console.warn('[ResumeFetch] Clean path failed. Trying original...');
@@ -633,8 +630,6 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
             if (!searchError && searchResults && searchResults.length > 0) {
                 // Find exact match or take first result
                 const match = searchResults.find(f => f.name === searchName) || searchResults[0];
-                console.log(`[ResumeFetch] Deep search found: "${match.name}"`);
-                
                 targetPath = match.name;
                 const { data: signedData } = await supabase.storage
                   .from(bucketName)
@@ -910,12 +905,12 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
                      // If zoom > 100, standard browsers will scale the content to fit width
                    }}
                 >
-                  <iframe 
-                    // Add URL params for page and disable toolbar (we use ours)
-                    // Added view=FitH to force horizontal fit which works well with container width zooming
-                    src={`${viewUrl}#page=${pdfPage}&view=FitH&toolbar=0&navpanes=0&scrollbar=0`} 
-                    className="w-full h-full min-h-[800px] border-none shadow-lg" 
-                    title="PDF Preview" 
+                  <iframe
+                    src={`${viewUrl}#page=${pdfPage}&view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
+                    className="w-full h-full min-h-[800px] border-none shadow-lg"
+                    title="PDF Preview"
+                    sandbox="allow-same-origin"
+                    referrerPolicy="no-referrer"
                   />
                 </div>
               ) : (
