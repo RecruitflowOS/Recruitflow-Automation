@@ -35,8 +35,12 @@ import {
 } from 'lucide-react';
 
 // --- Supabase Client Initialization ---
-const SUPABASE_URL = 'https://bebiojwkjnyyccnlqjge.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJlYmlvandram55eWNjbmxxamdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1NDMwNTksImV4cCI6MjA4NTExOTA1OX0.-vsjqytJI9XACqdaLdQ4VKQ3Mf7ZgNFWm36_1jvim4Y';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  throw new Error('Missing Supabase environment variables. Please check .env.local or Vercel environment configuration.');
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -909,7 +913,7 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
                     src={`${viewUrl}#page=${pdfPage}&view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
                     className="w-full h-full min-h-[800px] border-none shadow-lg"
                     title="PDF Preview"
-                    sandbox="allow-same-origin"
+                    sandbox="allow-scripts"
                     referrerPolicy="no-referrer"
                   />
                 </div>
