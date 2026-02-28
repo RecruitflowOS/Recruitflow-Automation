@@ -42,7 +42,14 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error('Missing Supabase environment variables. Please check .env.local or Vercel environment configuration.');
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+    detectSessionInUrl: false,
+    flowType: 'implicit'
+  }
+});
 
 // --- Types ---
 
@@ -901,21 +908,27 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
                   </div>
                 </div>
               ) : viewUrl ? (
-                <div 
-                   className="mx-auto transition-all duration-200 ease-out origin-top"
-                   style={{ 
-                     width: `${zoomLevel}%`, 
-                     minHeight: '100%',
-                     // If zoom > 100, standard browsers will scale the content to fit width
-                   }}
-                >
-                  <iframe
-                    src={`${viewUrl}#page=${pdfPage}&view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
-                    className="w-full h-full min-h-[800px] border-none shadow-lg"
-                    title="PDF Preview"
-                    sandbox="allow-scripts"
-                    referrerPolicy="no-referrer"
-                  />
+                <div className="w-full h-full flex flex-col items-center justify-center gap-4">
+                  <FileSearch className="w-12 h-12 text-indigo-200" />
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-slate-600 mb-4">Resume Preview</p>
+                    <div className="flex gap-3 justify-center flex-wrap">
+                      <button
+                        onClick={() => window.open(viewUrl, '_blank')}
+                        className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        View Resume
+                      </button>
+                      <button
+                        onClick={handleResumeDownload}
+                        className="inline-flex items-center px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors text-sm font-medium"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Download
+                      </button>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
