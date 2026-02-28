@@ -1,3 +1,4 @@
+import './globals.css';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
