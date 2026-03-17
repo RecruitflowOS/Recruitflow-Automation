@@ -111,8 +111,8 @@ export const DashboardHomeView: React.FC<Props> = ({ onNavigateToCampaigns }) =>
         <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
           <h2 className="text-lg font-bold text-slate-900 mb-4">Qualification Status</h2>
           {statusData.length > 0 ? (
-            <div className="h-56">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height={256}>
                 <PieChart>
                   <Pie
                     data={statusData}
@@ -170,8 +170,8 @@ export const DashboardHomeView: React.FC<Props> = ({ onNavigateToCampaigns }) =>
         {/* Score Distribution */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
           <h2 className="text-lg font-bold text-slate-900 mb-4">Score Distribution</h2>
-          <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height={256}>
               <BarChart data={scoreBuckets}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis dataKey="range" stroke="#94a3b8" />
@@ -186,8 +186,8 @@ export const DashboardHomeView: React.FC<Props> = ({ onNavigateToCampaigns }) =>
         {/* Candidates per Role */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
           <h2 className="text-lg font-bold text-slate-900 mb-4">Candidates by Role</h2>
-          <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height={256}>
               <BarChart
                 data={roleData}
                 layout="vertical"
