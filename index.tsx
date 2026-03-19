@@ -71,9 +71,9 @@ interface Candidate {
 
 const StatusBadge = ({ status }: { status: QualificationStatus }) => {
   const styles = {
-    Qualified: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-    Unqualified: 'bg-rose-100 text-rose-700 border-rose-200',
-    Pending: 'bg-amber-100 text-amber-700 border-amber-200'
+    Qualified: 'bg-gray-100 text-black border-gray-300',
+    Unqualified: 'bg-gray-200 text-gray-600 border-gray-300',
+    Pending: 'bg-gray-50 text-gray-500 border-gray-200'
   };
 
   const icons = {
@@ -94,9 +94,9 @@ const ScoreCircle = ({ score, label }: { score: number, label: string }) => (
   <div className="flex flex-col items-center">
     <div className="relative flex items-center justify-center">
       <svg className="w-16 h-16">
-        <circle className="text-slate-200" strokeWidth="5" stroke="currentColor" fill="transparent" r="28" cx="32" cy="32" />
-        <circle 
-          className="text-indigo-600" 
+        <circle className="text-gray-200" strokeWidth="5" stroke="currentColor" fill="transparent" r="28" cx="32" cy="32" />
+        <circle
+          className="text-black" 
           strokeWidth="5" 
           strokeDasharray={175.9} 
           strokeDashoffset={175.9 - (175.9 * score) / 100} 
@@ -108,9 +108,9 @@ const ScoreCircle = ({ score, label }: { score: number, label: string }) => (
           cy="32" 
         />
       </svg>
-      <span className="absolute text-sm font-bold text-slate-900">{score}%</span>
+      <span className="absolute text-sm font-bold text-black">{score}%</span>
     </div>
-    <span className="mt-2 text-[10px] uppercase tracking-wider font-semibold text-slate-500 text-center">{label}</span>
+    <span className="mt-2 text-[10px] uppercase tracking-wider font-semibold text-gray-500 text-center">{label}</span>
   </div>
 );
 
@@ -155,84 +155,84 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center mb-6">
           <img src="/logo.png" alt="Recruitflow" className="h-20 w-auto rounded-xl shadow-lg object-contain" />
         </div>
-        <h2 className="text-center text-3xl font-extrabold text-slate-900">
+        <h2 className="text-center text-3xl font-extrabold text-black">
           {isSignUp ? 'Create Account' : 'Recruiter Portal'}
         </h2>
-        <p className="mt-2 text-center text-sm text-slate-600 font-medium">
+        <p className="mt-2 text-center text-sm text-gray-600 font-medium">
           {isSignUp ? 'Join the recruitment team' : 'Internal Candidate Management'}
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-xl shadow-slate-200/50 sm:rounded-2xl sm:px-10 border border-slate-100">
+        <div className="bg-white py-8 px-4 shadow-xl shadow-gray-200/50 sm:rounded-2xl sm:px-10 border border-gray-200">
           <form className="space-y-6" onSubmit={handleAuth}>
             {error && (
-              <div className="bg-rose-50 border border-rose-100 text-rose-700 px-4 py-3 rounded-lg text-sm flex items-center">
+              <div className="bg-gray-100 border border-gray-300 text-black px-4 py-3 rounded-lg text-sm flex items-center">
                 <AlertCircle className="w-4 h-4 mr-2" />
                 {error}
               </div>
             )}
             {successMessage && (
-               <div className="bg-emerald-50 border border-emerald-100 text-emerald-700 px-4 py-3 rounded-lg text-sm flex items-center">
+               <div className="bg-gray-50 border border-gray-200 text-black px-4 py-3 rounded-lg text-sm flex items-center">
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 {successMessage}
               </div>
             )}
             <div>
-              <label className="block text-sm font-semibold text-slate-700">Recruiter Email</label>
-              <input 
-                type="email" 
+              <label className="block text-sm font-semibold text-gray-700">Recruiter Email</label>
+              <input
+                type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full border border-slate-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                className="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all"
                 placeholder="recruiter@enterprise.com"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700">Password</label>
-              <input 
-                type="password" 
+              <label className="block text-sm font-semibold text-gray-700">Password</label>
+              <input
+                type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full border border-slate-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                className="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all"
                 placeholder="••••••••"
               />
             </div>
-            <button 
+            <button
               disabled={loading}
               type="submit"
-              className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors disabled:opacity-50"
+              className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-colors disabled:opacity-50"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isSignUp ? 'Create Account' : 'Secure Login')}
             </button>
           </form>
-          
+
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200"></div>
+                <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-slate-500">
+                <span className="px-2 bg-white text-gray-500">
                   {isSignUp ? 'Already have an account?' : 'Need an account?'}
                 </span>
               </div>
             </div>
             <div className="mt-6 flex justify-center">
-                <button 
+                <button
                   onClick={() => {
                     setIsSignUp(!isSignUp);
                     setError(null);
                     setSuccessMessage(null);
                   }}
-                  className="text-indigo-600 hover:text-indigo-500 font-semibold text-sm hover:underline"
+                  className="text-black hover:text-gray-600 font-semibold text-sm hover:underline"
                 >
                     {isSignUp ? 'Sign in instead' : 'Sign up for access'}
                 </button>
@@ -241,7 +241,7 @@ const LoginPage = () => {
 
           {!isSignUp && (
             <div className="mt-6 flex flex-col items-center">
-               <span className="text-xs text-slate-400 font-medium tracking-wide">ENTERPRISE SECURITY ACTIVE</span>
+               <span className="text-xs text-gray-400 font-medium tracking-wide">ENTERPRISE SECURITY ACTIVE</span>
             </div>
           )}
         </div>
@@ -376,25 +376,25 @@ const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate
   };
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center h-64 text-slate-400">
-      <Loader2 className="w-10 h-10 animate-spin mb-4 text-indigo-500" />
+    <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+      <Loader2 className="w-10 h-10 animate-spin mb-4 text-black" />
       <p className="font-medium">Fetching candidate pipeline...</p>
     </div>
   );
 
   if (error) return (
-    <div className="flex flex-col items-center justify-center h-64 text-slate-500 p-8 text-center animate-in fade-in">
-      <div className="bg-rose-100 p-3 rounded-full mb-4">
-        <AlertCircle className="w-8 h-8 text-rose-600" />
+    <div className="flex flex-col items-center justify-center h-64 text-gray-500 p-8 text-center animate-in fade-in">
+      <div className="bg-gray-200 p-3 rounded-full mb-4">
+        <AlertCircle className="w-8 h-8 text-black" />
       </div>
-      <h3 className="text-lg font-bold text-slate-900 mb-2">Access Denied</h3>
-      <p className="max-w-md text-sm text-slate-600 mb-6">
+      <h3 className="text-lg font-bold text-black mb-2">Access Denied</h3>
+      <p className="max-w-md text-sm text-gray-600 mb-6">
         Unable to load candidates. This is likely due to missing database permissions (RLS) for your account.
-        <br/><span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded mt-2 inline-block text-rose-500">{error}</span>
+        <br/><span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded mt-2 inline-block text-gray-600">{error}</span>
       </p>
       <button
         onClick={() => fetchCandidates(1)}
-        className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition-colors"
+        className="flex items-center px-4 py-2 bg-black text-white rounded-lg font-bold text-sm hover:bg-gray-800 transition-colors"
       >
         <RefreshCw className="w-4 h-4 mr-2" />
         Retry Connection
@@ -406,8 +406,8 @@ const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">MA Construction Personnel list</h1>
-          <p className="text-slate-500 mt-1">
+          <h1 className="text-2xl font-bold text-black">MA Construction Personnel list</h1>
+          <p className="text-gray-500 mt-1">
             {totalCount > 0
               ? `Showing ${startItem}–${endItem} of ${totalCount} candidates · Sorted by highest AI score`
               : 'Sorting by highest AI score (Total Score DESC)'}
@@ -416,64 +416,64 @@ const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate
         <button
           onClick={handleDownloadTop10}
           disabled={totalCount === 0}
-          className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold text-sm hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center px-4 py-2 bg-black text-white rounded-lg font-semibold text-sm hover:bg-gray-800 transition-colors shadow-sm shadow-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Download className="w-4 h-4 mr-2" />
           Download Top 10 Report
         </button>
       </div>
 
-      <div ref={tableRef} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+      <div ref={tableRef} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
         <div className={`overflow-x-auto transition-opacity duration-200 ${pageLoading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
-          <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-50">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Full Name</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Contact Info</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider text-center">AI Score</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Qualification</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Full Name</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Contact Info</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider text-center">AI Score</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Qualification</th>
                 <th className="relative px-6 py-4"></th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-slate-200">
+            <tbody className="bg-white divide-y divide-gray-200">
               {candidates.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm">
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-400 text-sm">
                     No candidates found in this campaign.
                   </td>
                 </tr>
               ) : (
                 candidates.map((candidate) => (
-                  <tr key={candidate.id} className="hover:bg-slate-50 transition-colors group">
+                  <tr key={candidate.id} className="hover:bg-gray-50 transition-colors group">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="h-10 w-10 flex-shrink-0 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold border border-indigo-100">
+                        <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gray-100 flex items-center justify-center text-black font-bold border border-gray-200">
                           {candidate.full_name.charAt(0)}
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-bold text-slate-900">{candidate.full_name}</div>
+                          <div className="text-sm font-bold text-black">{candidate.full_name}</div>
                           {candidate.position_applied
-                            ? <div className="text-xs text-indigo-500 font-medium truncate max-w-[180px]">{candidate.position_applied}</div>
-                            : <div className="text-xs text-slate-500 font-medium uppercase tracking-tight">ID_{candidate.id.slice(0,6)}</div>
+                            ? <div className="text-xs text-gray-600 font-medium truncate max-w-[180px]">{candidate.position_applied}</div>
+                            : <div className="text-xs text-gray-500 font-medium uppercase tracking-tight">ID_{candidate.id.slice(0,6)}</div>
                           }
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-slate-900 flex items-center mb-1">
-                        <Mail className="w-3.5 h-3.5 mr-2 text-slate-400" />
+                      <div className="text-sm text-black flex items-center mb-1">
+                        <Mail className="w-3.5 h-3.5 mr-2 text-gray-400" />
                         {candidate.email}
                       </div>
-                      <div className="text-xs text-slate-500 flex items-center">
-                        <Phone className="w-3.5 h-3.5 mr-2 text-slate-400" />
+                      <div className="text-xs text-gray-500 flex items-center">
+                        <Phone className="w-3.5 h-3.5 mr-2 text-gray-400" />
                         {candidate.phone}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col items-center">
-                        <span className="text-sm font-bold text-indigo-600">{candidate.total_score}%</span>
-                        <div className="w-24 bg-slate-100 rounded-full h-1.5 mt-1 overflow-hidden">
-                          <div className="h-full rounded-full bg-indigo-600" style={{ width: `${candidate.total_score}%` }}></div>
+                        <span className="text-sm font-bold text-black">{candidate.total_score}%</span>
+                        <div className="w-24 bg-gray-100 rounded-full h-1.5 mt-1 overflow-hidden">
+                          <div className="h-full rounded-full bg-black" style={{ width: `${candidate.total_score}%` }}></div>
                         </div>
                       </div>
                     </td>
@@ -483,7 +483,7 @@ const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => onSelectCandidate(candidate)}
-                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-bold rounded-lg text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors"
+                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-bold rounded-lg text-black bg-gray-100 hover:bg-gray-200 transition-colors"
                       >
                         View Profile
                         <ChevronRight className="ml-1 w-4 h-4" />
@@ -498,13 +498,13 @@ const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate
 
         {/* Pagination Footer */}
         {totalCount > 0 && (
-          <div className="px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="text-sm text-slate-500 order-2 sm:order-1">
+          <div className="px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-sm text-gray-500 order-2 sm:order-1">
               Showing{' '}
-              <span className="font-semibold text-slate-700">{startItem}</span>–<span className="font-semibold text-slate-700">{endItem}</span>
+              <span className="font-semibold text-gray-700">{startItem}</span>–<span className="font-semibold text-gray-700">{endItem}</span>
               {' '}of{' '}
-              <span className="font-semibold text-slate-700">{totalCount}</span> candidates
-              {pageLoading && <Loader2 className="inline w-3.5 h-3.5 animate-spin ml-2 text-indigo-500" />}
+              <span className="font-semibold text-gray-700">{totalCount}</span> candidates
+              {pageLoading && <Loader2 className="inline w-3.5 h-3.5 animate-spin ml-2 text-black" />}
             </p>
 
             {totalPages > 1 && (
@@ -513,7 +513,7 @@ const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1 || pageLoading}
                   aria-label="Previous page"
-                  className="flex items-center px-3 py-1.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  className="flex items-center px-3 py-1.5 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-black hover:border-gray-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                 >
                   <ChevronLeft className="w-4 h-4 mr-1" />
                   Prev
@@ -521,7 +521,7 @@ const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate
 
                 {getPageNumbers().map((page, idx) =>
                   page === '...' ? (
-                    <span key={`ell-${idx}`} className="px-2 text-sm text-slate-400 select-none">…</span>
+                    <span key={`ell-${idx}`} className="px-2 text-sm text-gray-400 select-none">…</span>
                   ) : (
                     <button
                       key={page}
@@ -531,8 +531,8 @@ const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate
                       aria-current={page === currentPage ? 'page' : undefined}
                       className={`w-9 h-9 text-sm font-semibold rounded-lg transition-all ${
                         page === currentPage
-                          ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-200 cursor-default'
-                          : 'text-slate-600 bg-white border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200'
+                          ? 'bg-black text-white shadow-sm shadow-gray-300 cursor-default'
+                          : 'text-gray-600 bg-white border border-gray-200 hover:bg-gray-100 hover:text-black hover:border-gray-400'
                       } disabled:opacity-50`}
                     >
                       {page}
@@ -544,7 +544,7 @@ const DashboardView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages || pageLoading}
                   aria-label="Next page"
-                  className="flex items-center px-3 py-1.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  className="flex items-center px-3 py-1.5 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-black hover:border-gray-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                 >
                   Next
                   <ChevronRight className="w-4 h-4 ml-1" />
@@ -717,7 +717,7 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-      <button onClick={onBack} className="flex items-center text-sm font-semibold text-slate-500 hover:text-indigo-600 transition-colors group">
+      <button onClick={onBack} className="flex items-center text-sm font-semibold text-gray-500 hover:text-black transition-colors group">
         <ArrowLeft className="w-4 h-4 mr-1 transition-transform group-hover:-translate-x-1" />
         Back to Pipeline
       </button>
@@ -725,50 +725,50 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Profile Details */}
         <div className="lg:w-1/3 space-y-6">
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
             <div className="flex items-center mb-6">
-              <div className="h-16 w-16 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-2xl font-bold">
+              <div className="h-16 w-16 rounded-2xl bg-black text-white flex items-center justify-center text-2xl font-bold">
                 {candidate.full_name.charAt(0)}
               </div>
               <div className="ml-4">
-                <h2 className="text-xl font-bold text-slate-900 leading-tight">{candidate.full_name}</h2>
+                <h2 className="text-xl font-bold text-black leading-tight">{candidate.full_name}</h2>
                 <StatusBadge status={candidate.status} />
               </div>
             </div>
 
             {/* Contact & Role Details */}
-            <div className="space-y-2 mb-6 border-b border-slate-100 pb-6">
+            <div className="space-y-2 mb-6 border-b border-gray-100 pb-6">
               {candidate.position_applied && (
-                <div className="flex items-start text-sm text-slate-700">
-                  <Briefcase className="w-3.5 h-3.5 mr-2 mt-0.5 text-indigo-500 shrink-0" />
+                <div className="flex items-start text-sm text-gray-700">
+                  <Briefcase className="w-3.5 h-3.5 mr-2 mt-0.5 text-black shrink-0" />
                   <span className="font-medium">{candidate.position_applied}</span>
                 </div>
               )}
-              <div className="flex items-center text-sm text-slate-600">
-                <Mail className="w-3.5 h-3.5 mr-2 text-slate-400 shrink-0" />
+              <div className="flex items-center text-sm text-gray-600">
+                <Mail className="w-3.5 h-3.5 mr-2 text-gray-400 shrink-0" />
                 {candidate.email}
               </div>
-              <div className="flex items-center text-sm text-slate-600">
-                <Phone className="w-3.5 h-3.5 mr-2 text-slate-400 shrink-0" />
+              <div className="flex items-center text-sm text-gray-600">
+                <Phone className="w-3.5 h-3.5 mr-2 text-gray-400 shrink-0" />
                 {candidate.phone}
               </div>
               {candidate.current_city && (
-                <div className="flex items-center text-sm text-slate-600">
-                  <MapPin className="w-3.5 h-3.5 mr-2 text-slate-400 shrink-0" />
+                <div className="flex items-center text-sm text-gray-600">
+                  <MapPin className="w-3.5 h-3.5 mr-2 text-gray-400 shrink-0" />
                   {candidate.current_city}
                 </div>
               )}
               {candidate.nationality && (
-                <div className="flex items-center text-sm text-slate-600">
-                  <Globe className="w-3.5 h-3.5 mr-2 text-slate-400 shrink-0" />
+                <div className="flex items-center text-sm text-gray-600">
+                  <Globe className="w-3.5 h-3.5 mr-2 text-gray-400 shrink-0" />
                   {candidate.nationality}
                 </div>
               )}
             </div>
 
             <div className="space-y-6">
-              <h3 className="text-sm font-bold text-slate-900 flex items-center border-b border-slate-100 pb-2">
-                <Award className="w-4 h-4 mr-2 text-indigo-600" />
+              <h3 className="text-sm font-bold text-black flex items-center border-b border-gray-100 pb-2">
+                <Award className="w-4 h-4 mr-2 text-black" />
                 AI Evaluation Matrix
               </h3>
               
@@ -778,12 +778,12 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
                 <ScoreCircle score={candidate.cultural_fit_score} label="Cultural" />
               </div>
 
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center">
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center">
                   <FileText className="w-3 h-3 mr-1" />
                   Executive Summary
                 </p>
-                <p className="text-sm text-slate-700 leading-relaxed italic">
+                <p className="text-sm text-gray-700 leading-relaxed italic">
                   "{candidate.summary}"
                 </p>
               </div>
@@ -792,7 +792,7 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
             <div className="mt-8 space-y-3">
               <button 
                 onClick={handleReportDownload}
-                className="w-full flex items-center justify-center py-3 px-4 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-100 disabled:opacity-50"
+                className="w-full flex items-center justify-center py-3 px-4 bg-black text-white rounded-lg font-bold text-sm hover:bg-gray-800 transition-colors shadow-sm shadow-gray-200 disabled:opacity-50"
                 disabled={!candidate.reports}
               >
                 <Download className="w-4 h-4 mr-2" />
@@ -800,7 +800,7 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
               </button>
               <button 
                 onClick={handleResumeDownload}
-                className="w-full flex items-center justify-center py-3 px-4 bg-white border border-slate-200 text-slate-700 rounded-lg font-bold text-sm hover:bg-slate-50 transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center py-3 px-4 bg-white border border-gray-200 text-gray-700 rounded-lg font-bold text-sm hover:bg-gray-50 transition-colors disabled:opacity-50"
                 disabled={!downloadUrl}
               >
                 <FileText className="w-4 h-4 mr-2" />
@@ -812,27 +812,27 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
 
         {/* Resume Preview */}
         <div className="lg:w-2/3">
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm h-[800px] flex flex-col relative">
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm h-[800px] flex flex-col relative">
             
             {/* Toolbar */}
-             <div className="bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-between shadow-sm z-10 shrink-0 h-12">
+             <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between shadow-sm z-10 shrink-0 h-12">
                <div className="flex items-center space-x-1">
-                 <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mr-3 hidden sm:block">Preview</h3>
-                 <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
+                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mr-3 hidden sm:block">Preview</h3>
+                 <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
                     <button 
                       onClick={handlePagePrev} 
                       disabled={pdfPage <= 1}
-                      className="p-1 hover:bg-white rounded-md text-slate-500 hover:text-indigo-600 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+                      className="p-1 hover:bg-white rounded-md text-gray-500 hover:text-black disabled:opacity-30 disabled:hover:bg-transparent transition-all"
                       title="Previous Page"
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </button>
-                    <span className="text-xs font-mono font-bold text-slate-700 w-12 text-center select-none">
+                    <span className="text-xs font-mono font-bold text-gray-700 w-12 text-center select-none">
                       Page {pdfPage}
                     </span>
                     <button 
                        onClick={handlePageNext}
-                       className="p-1 hover:bg-white rounded-md text-slate-500 hover:text-indigo-600 transition-all"
+                       className="p-1 hover:bg-white rounded-md text-gray-500 hover:text-black transition-all"
                        title="Next Page"
                     >
                       <ChevronRight className="w-4 h-4" />
@@ -841,20 +841,20 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
                </div>
 
                <div className="flex items-center space-x-2">
-                 <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
+                 <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
                     <button 
                       onClick={handleZoomOut}
-                      className="p-1 hover:bg-white rounded-md text-slate-500 hover:text-indigo-600 transition-all"
+                      className="p-1 hover:bg-white rounded-md text-gray-500 hover:text-black transition-all"
                       title="Zoom Out"
                     >
                       <Minus className="w-3.5 h-3.5" />
                     </button>
-                    <span className="text-xs font-mono font-bold text-slate-700 w-12 text-center select-none">
+                    <span className="text-xs font-mono font-bold text-gray-700 w-12 text-center select-none">
                       {zoomLevel}%
                     </span>
                     <button 
                       onClick={handleZoomIn}
-                      className="p-1 hover:bg-white rounded-md text-slate-500 hover:text-indigo-600 transition-all"
+                      className="p-1 hover:bg-white rounded-md text-gray-500 hover:text-black transition-all"
                       title="Zoom In"
                     >
                       <Plus className="w-3.5 h-3.5" />
@@ -862,18 +862,18 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
                  </div>
                  <button 
                    onClick={handleZoomReset}
-                   className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-700 transition-colors"
+                   className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-gray-700 transition-colors"
                    title="Reset Zoom"
                  >
                    <RotateCcw className="w-3.5 h-3.5" />
                  </button>
-                 <div className="w-px h-4 bg-slate-200 mx-1"></div>
+                 <div className="w-px h-4 bg-gray-200 mx-1"></div>
                  {viewUrl && (
                   <a 
                     href={viewUrl} 
                     target="_blank" 
                     rel="noopener noreferrer" 
-                    className="text-slate-400 hover:text-indigo-600 transition-colors p-1"
+                    className="text-gray-400 hover:text-black transition-colors p-1"
                     title="Open in New Tab"
                   >
                     <ExternalLink className="w-4 h-4" />
@@ -882,22 +882,22 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
                </div>
             </div>
 
-            <div className="flex-1 bg-slate-100 overflow-auto relative">
+            <div className="flex-1 bg-gray-100 overflow-auto relative">
               {loadingUrl ? (
-                 <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                 <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
                     <Loader2 className="w-8 h-8 animate-spin mb-2" />
                     <p className="text-sm font-medium">Searching Secure Storage...</p>
                  </div>
               ) : urlError ? (
-                <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 p-8 text-center">
-                  <div className="bg-amber-100 p-3 rounded-full mb-4">
-                    <AlertCircle className="w-8 h-8 text-amber-600" />
+                <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 p-8 text-center">
+                  <div className="bg-gray-200 p-3 rounded-full mb-4">
+                    <AlertCircle className="w-8 h-8 text-black" />
                   </div>
-                  <h3 className="text-lg font-bold text-slate-900 mb-2">Resume Not Found</h3>
-                  <p className="text-sm text-slate-600 mb-4 max-w-sm">
+                  <h3 className="text-lg font-bold text-black mb-2">Resume Not Found</h3>
+                  <p className="text-sm text-gray-600 mb-4 max-w-sm">
                     The system could not locate the file. It may have been deleted or the naming convention is invalid.
                   </p>
-                  <div className="text-xs font-mono bg-white p-2 rounded border border-slate-200 text-slate-500 break-all max-w-md">
+                  <div className="text-xs font-mono bg-white p-2 rounded border border-gray-200 text-gray-500 break-all max-w-md">
                      DB Record: {candidate.resume_path}
                   </div>
                 </div>
@@ -919,7 +919,7 @@ const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onB
                   />
                 </div>
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
                    <p className="text-sm font-medium">No resume document available.</p>
                 </div>
               )}
@@ -953,8 +953,8 @@ const App = () => {
   }, []);
 
   if (!initialized) return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-      <Loader2 className="w-12 h-12 text-indigo-500 animate-spin" />
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <Loader2 className="w-12 h-12 text-black animate-spin" />
     </div>
   );
 
@@ -964,18 +964,18 @@ const App = () => {
 
   if (user.email !== 'moconstruction@gmail.com') {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-100 p-10 max-w-md w-full text-center">
-          <div className="mb-4 text-rose-500">
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-10 max-w-md w-full text-center">
+          <div className="mb-4 text-black">
             <AlertCircle className="w-12 h-12 mx-auto" />
           </div>
-          <h2 className="text-xl font-bold text-slate-900 mb-2">Access Denied</h2>
-          <p className="text-slate-500 text-sm mb-6">
-            This portal is restricted. You are signed in as <span className="font-semibold text-slate-700">{user.email}</span>, which does not have access.
+          <h2 className="text-xl font-bold text-black mb-2">Access Denied</h2>
+          <p className="text-gray-500 text-sm mb-6">
+            This portal is restricted. You are signed in as <span className="font-semibold text-gray-700">{user.email}</span>, which does not have access.
           </p>
           <button
             onClick={() => supabase.auth.signOut()}
-            className="w-full flex items-center justify-center px-4 py-3 text-sm font-bold text-white bg-rose-500 hover:bg-rose-600 rounded-xl transition-colors"
+            className="w-full flex items-center justify-center px-4 py-3 text-sm font-bold text-white bg-black hover:bg-gray-800 rounded-xl transition-colors"
           >
             <LogOut className="w-4 h-4 mr-2" />
             Sign Out
@@ -986,9 +986,9 @@ const App = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-slate-900 text-white hidden xl:flex flex-col flex-shrink-0">
+      <aside className="w-64 bg-black text-white hidden xl:flex flex-col flex-shrink-0">
         <div className="p-8">
           <div className="flex items-center space-x-3 mb-10">
             <img src="/logo.png" alt="Recruitflow" className="h-10 w-auto rounded-lg object-contain" />
@@ -998,7 +998,7 @@ const App = () => {
           <nav className="space-y-1">
             <button 
               onClick={() => { setCurrentView('dashboard'); setSelectedCandidate(null); }}
-              className={`w-full flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all ${currentView === 'dashboard' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+              className={`w-full flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all ${currentView === 'dashboard' ? 'bg-white text-black shadow-lg shadow-gray-500/20' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
             >
               <LayoutDashboard className="w-5 h-5 mr-3" />
               Campaigns
@@ -1006,19 +1006,19 @@ const App = () => {
           </nav>
         </div>
 
-        <div className="mt-auto p-8 border-t border-slate-800">
+        <div className="mt-auto p-8 border-t border-gray-800">
           <div className="flex items-center mb-6">
-            <div className="h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center font-bold text-indigo-400 uppercase">
+            <div className="h-10 w-10 rounded-full bg-gray-700 flex items-center justify-center font-bold text-white uppercase">
               {user.email?.charAt(0)}
             </div>
             <div className="ml-3 overflow-hidden">
               <p className="text-sm font-bold truncate">Recruiter</p>
-              <p className="text-[10px] text-slate-500 truncate uppercase tracking-tighter">{user.email}</p>
+              <p className="text-[10px] text-gray-500 truncate uppercase tracking-tighter">{user.email}</p>
             </div>
           </div>
           <button 
             onClick={() => supabase.auth.signOut()}
-            className="w-full flex items-center px-4 py-3 text-sm font-bold text-rose-400 hover:bg-rose-500/10 rounded-xl transition-colors"
+            className="w-full flex items-center px-4 py-3 text-sm font-bold text-gray-400 hover:bg-gray-700 rounded-xl transition-colors"
           >
             <LogOut className="w-5 h-5 mr-3" />
             Logout
@@ -1028,23 +1028,23 @@ const App = () => {
 
       {/* Content Area */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="bg-white border-b border-slate-200 h-16 flex items-center px-8 justify-between flex-shrink-0">
+        <header className="bg-white border-b border-gray-200 h-16 flex items-center px-8 justify-between flex-shrink-0">
           <div className="flex items-center flex-1 max-w-lg">
             <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input 
                 type="text" 
                 placeholder="Search candidates by name, email..." 
-                className="w-full bg-slate-100 border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                className="w-full bg-gray-100 border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-black outline-none transition-all"
               />
             </div>
           </div>
           <div className="flex items-center space-x-4">
-             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest px-3 py-1 bg-slate-50 border border-slate-100 rounded-md">Enterprise Console</span>
+             <span className="text-xs font-bold text-gray-400 uppercase tracking-widest px-3 py-1 bg-gray-50 border border-gray-100 rounded-md">Enterprise Console</span>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50">
+        <div className="flex-1 overflow-y-auto p-8 bg-gray-50/50">
           <div className="max-w-7xl mx-auto">
             {currentView === 'dashboard' ? (
               <DashboardView 
