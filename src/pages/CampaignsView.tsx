@@ -3,7 +3,13 @@ import { Loader2, AlertCircle, Download, ChevronRight, ChevronLeft, Mail, Phone,
 import { supabase, Candidate, mapCandidate, ITEMS_PER_PAGE } from '@/types';
 import { StatusBadge } from '@/components/StatusBadge';
 
-export const CampaignsView = ({ onSelectCandidate }: { onSelectCandidate: (c: Candidate) => void }) => {
+interface CampaignsViewProps {
+  onSelectCandidate: (c: Candidate) => void;
+  tableName: string;
+  campaignTitle: string;
+}
+
+export const CampaignsView = ({ onSelectCandidate, tableName, campaignTitle }: CampaignsViewProps) => {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [pageLoading, setPageLoading] = useState(false);
@@ -20,14 +26,14 @@ export const CampaignsView = ({ onSelectCandidate }: { onSelectCandidate: (c: Ca
 
   // Fetch distinct roles on mount
   useEffect(() => {
-    supabase.from('campaign_candidates')
+    supabase.from(tableName)
       .select('position_applied')
       .not('position_applied', 'is', null)
       .order('position_applied')
       .then(({ data }) => {
         if (data) setRoles([...new Set(data.map(r => r.position_applied as string).filter(Boolean))]);
       });
-  }, []);
+  }, [tableName]);
 
   const fetchCandidates = async (page: number = 1, role = selectedRole) => {
     page === 1 ? setLoading(true) : setPageLoading(true);
@@ -37,7 +43,7 @@ export const CampaignsView = ({ onSelectCandidate }: { onSelectCandidate: (c: Ca
     const to = from + ITEMS_PER_PAGE - 1;
 
     let query = supabase
-      .from('campaign_candidates')
+      .from(tableName)
       .select('*', { count: 'exact' })
       .order('screening_score', { ascending: false })
       .range(from, to);
@@ -76,7 +82,7 @@ export const CampaignsView = ({ onSelectCandidate }: { onSelectCandidate: (c: Ca
 
   const handleDownloadTop10 = async () => {
     let query = supabase
-      .from('campaign_candidates')
+      .from(tableName)
       .select('*')
       .order('screening_score', { ascending: false })
       .limit(10);
@@ -162,7 +168,7 @@ export const CampaignsView = ({ onSelectCandidate }: { onSelectCandidate: (c: Ca
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">MA Construction Personnel list</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{campaignTitle}</h1>
           <p className="text-slate-500 mt-1">
             {totalCount > 0
               ? `Showing ${startItem}–${endItem} of ${totalCount} candidates · Sorted by highest AI score`

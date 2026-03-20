@@ -19,6 +19,12 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 
 // --- Types ---
 
+export interface UserProfile {
+  id: string;
+  email: string;
+  company_name: string;
+}
+
 export type QualificationStatus = 'Qualified' | 'Unqualified' | 'Pending';
 
 export interface Candidate {

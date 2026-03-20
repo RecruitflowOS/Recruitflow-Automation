@@ -8,16 +8,17 @@ import { supabase, Candidate, mapCandidate } from '@/types';
 
 interface Props {
   onNavigateToCampaigns: () => void;
+  tableName: string;
 }
 
-export const DashboardHomeView: React.FC<Props> = ({ onNavigateToCampaigns }) => {
+export const DashboardHomeView: React.FC<Props> = ({ onNavigateToCampaigns, tableName }) => {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       const { data } = await supabase
-        .from('campaign_candidates')
+        .from(tableName)
         .select('screening_score, screening_status, position_applied, full_name, id')
         .order('screening_score', { ascending: false });
 
@@ -28,7 +29,7 @@ export const DashboardHomeView: React.FC<Props> = ({ onNavigateToCampaigns }) =>
     };
 
     fetchData();
-  }, []);
+  }, [tableName]);
 
   if (loading) {
     return (
