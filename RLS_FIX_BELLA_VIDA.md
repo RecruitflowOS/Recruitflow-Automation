@@ -3,6 +3,7 @@
 ## Problem
 The `campaign_candidates_duplicate` table has RLS (Row Level Security) enabled, which blocks the anon key from reading data. This causes the app to show "Unable to load candidates" errors.
 
+
 ## Solution
 Run these SQL commands in Supabase SQL Editor to allow public read access.
 
@@ -12,8 +13,7 @@ Run these SQL commands in Supabase SQL Editor to allow public read access.
 
 ### Step 1: Enable RLS on the table (if not already enabled)
 ```sql
-ALTER TABLE "Bella Vida campaign_candidates_duplicate" ENABLE ROW LEVEL SECURITY;
-```
+ALTER TABLE "Bella Vida campaign_candidates_duplicate" ENABLE ROW LEVEL SECURITY;```
 
 ### Step 2: Create policy for public read access
 ```sql

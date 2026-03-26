@@ -49,7 +49,7 @@ Once you have the user ID from Step 4, run this query (replace `YOUR_USER_ID` wi
 ```sql
 INSERT INTO users (id, email, company_name)
 VALUES (
-  'YOUR_USER_ID',
+  'f6bee6ad-ce93-44d2-92e1-8e4f5a992633',
   'bella.vida@example.com',
   'bella_vida'
 );
