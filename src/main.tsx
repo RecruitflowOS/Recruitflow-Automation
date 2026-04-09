@@ -21,11 +21,13 @@ type AppView = 'home' | 'campaigns' | 'profile';
 const TABLE_MAP: Record<string, string> = {
   bella_vida: 'Bella Vida campaign_candidates_duplicate',
   mo_construction: 'campaign_candidates',
+  id8_technologies: 'ID8 Technologies campaign_candidates_duplicate_duplicate',
 };
 
 const TITLE_MAP: Record<string, string> = {
   bella_vida: 'Bella Vida Campaign',
   mo_construction: "Mo's Construction Campaign",
+  id8_technologies: 'ID8 Technologies Campaign',
 };
 
 const App = () => {
