@@ -45,7 +45,7 @@ export const DashboardHomeView: React.FC<Props> = ({ onNavigateToCampaigns, tabl
   const qualifiedCount = candidates.filter(c => c.status === 'Qualified').length;
   const unqualifiedCount = candidates.filter(c => c.status === 'Unqualified').length;
   const pendingCount = candidates.filter(c => c.status === 'Pending').length;
-  const avgScore = totalCount > 0 ? Math.round(candidates.reduce((sum, c) => sum + c.total_score, 0) / totalCount) : 0;
+  const avgScore = totalCount > 0 ? Math.round(candidates.reduce((sum, c) => sum + c.screening_score, 0) / totalCount) : 0;
 
   // Status data for pie chart
   const statusData = [
@@ -58,11 +58,11 @@ export const DashboardHomeView: React.FC<Props> = ({ onNavigateToCampaigns, tabl
 
   // Score histogram (5 ranges)
   const scoreBuckets = [
-    { range: '0-20', count: candidates.filter(c => c.total_score <= 20).length },
-    { range: '21-40', count: candidates.filter(c => c.total_score > 20 && c.total_score <= 40).length },
-    { range: '41-60', count: candidates.filter(c => c.total_score > 40 && c.total_score <= 60).length },
-    { range: '61-80', count: candidates.filter(c => c.total_score > 60 && c.total_score <= 80).length },
-    { range: '81-100', count: candidates.filter(c => c.total_score > 80).length }
+    { range: '0-20', count: candidates.filter(c => c.screening_score <= 20).length },
+    { range: '21-40', count: candidates.filter(c => c.screening_score > 20 && c.screening_score <= 40).length },
+    { range: '41-60', count: candidates.filter(c => c.screening_score > 40 && c.screening_score <= 60).length },
+    { range: '61-80', count: candidates.filter(c => c.screening_score > 60 && c.screening_score <= 80).length },
+    { range: '81-100', count: candidates.filter(c => c.screening_score > 80).length }
   ];
 
   // Candidates per role
@@ -158,7 +158,7 @@ export const DashboardHomeView: React.FC<Props> = ({ onNavigateToCampaigns, tabl
                   )}
                 </div>
                 <div className="ml-2 flex items-center gap-2 shrink-0">
-                  <span className="text-sm font-bold text-indigo-600">{candidate.total_score}%</span>
+                  <span className="text-sm font-bold text-indigo-600">{candidate.screening_score}%</span>
                 </div>
               </div>
             ))}

@@ -23,6 +23,7 @@ const TABLE_MAP: Record<string, string> = {
   mo_construction: 'campaign_candidates',
   id8_technologies: 'ID8 Technologies campaign_candidates_duplicate_duplicate',
   refrane_dev: 'Refrane_dev_campaign_candidates_duplicate',
+  document_warehouse: 'Document Warehouse campaign_candidates_duplicate_duplicate_dupl',
 };
 
 const TITLE_MAP: Record<string, string> = {
@@ -30,12 +31,13 @@ const TITLE_MAP: Record<string, string> = {
   mo_construction: "Mo's Construction Campaign",
   id8_technologies: 'ID8 Technologies Campaign',
   refrane_dev: 'Refrane Dev Campaign',
+  document_warehouse: 'Document Warehouse Campaign',
 };
 
 // Email-based company mapping — takes precedence over the users table
 const EMAIL_TO_COMPANY: Record<string, string> = {
   'refranedev@gmail.com': 'refrane_dev',
-  'rentia@documentwarehouse.com.na': 'refrane_dev',
+  'rentia@documentwarehouse.com.na': 'document_warehouse',
 };
 
 const App = () => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   ArrowLeft,
   Loader2,
@@ -11,18 +11,18 @@ import {
   MapPin,
   Briefcase,
   Globe,
-  ExternalLink,
   Award,
-  FileSearch,
-  Minus,
-  Plus,
-  RotateCcw,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
 } from 'lucide-react';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 import { supabase, Candidate } from '@/types';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ScoreCircle } from '@/components/ScoreCircle';
+
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 export const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onBack: () => void }) => {
   const [viewUrl, setViewUrl] = useState<string | null>(null);
@@ -31,10 +31,22 @@ export const CandidateProfileView = ({ candidate, onBack }: { candidate: Candida
   const [urlError, setUrlError] = useState<string | null>(null);
   const [resolvedPath, setResolvedPath] = useState<string | null>(null);
   const [retryKey, setRetryKey] = useState(0);
+  const [numPages, setNumPages] = useState<number | null>(null);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState<number>(600);
 
-  // PDF Navigation State
-  const [pdfPage, setPdfPage] = useState(1);
-  const [zoomLevel, setZoomLevel] = useState(100);
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -44,8 +56,9 @@ export const CandidateProfileView = ({ candidate, onBack }: { candidate: Candida
       setLoadingUrl(true);
       setUrlError(null);
       setResolvedPath(null);
-      setPdfPage(1);
-      setZoomLevel(100);
+      setNumPages(null);
+      setPageNumber(1);
+      setPdfError(null);
 
       const bucketName = 'resumes';
       const originalPath = candidate.resume_path;
@@ -57,7 +70,6 @@ export const CandidateProfileView = ({ candidate, onBack }: { candidate: Candida
       let fetchError: string | null = null;
 
       try {
-        // --- Strategy 1: Direct Fetch (Clean Path) ---
         const { data: directData } = await supabase.storage
           .from(bucketName)
           .createSignedUrls([cleanPath], 3600);
@@ -65,34 +77,23 @@ export const CandidateProfileView = ({ candidate, onBack }: { candidate: Candida
         if (directData && directData[0] && !directData[0].error) {
           finalViewUrl = directData[0].signedUrl;
         } else {
-          console.warn('[ResumeFetch] Clean path failed. Trying original...');
-
-          // --- Strategy 2: Direct Fetch (Original Path) ---
           if (cleanPath !== originalPath) {
             const { data: originalData } = await supabase.storage
               .from(bucketName)
               .createSignedUrls([originalPath], 3600);
 
             if (originalData && originalData[0] && !originalData[0].error) {
-              console.log('[ResumeFetch] Success with original path.');
               targetPath = originalPath;
               finalViewUrl = originalData[0].signedUrl;
             }
           }
         }
 
-        // --- Strategy 3: Deep Search (List bucket with search param) ---
         if (!finalViewUrl) {
-          console.warn('[ResumeFetch] Direct fetches failed. Attempting deep search...');
-
           const searchName = cleanPath.split('/').pop() || cleanPath;
-
           const { data: searchResults, error: searchError } = await supabase.storage
             .from(bucketName)
-            .list('', {
-              limit: 10,
-              search: searchName
-            });
+            .list('', { limit: 10, search: searchName });
 
           if (!searchError && searchResults && searchResults.length > 0) {
             const match = searchResults.find(f => f.name === searchName) || searchResults[0];
@@ -107,12 +108,10 @@ export const CandidateProfileView = ({ candidate, onBack }: { candidate: Candida
               fetchError = signedData?.[0]?.error || "Failed to sign discovered file";
             }
           } else {
-            console.error('[ResumeFetch] Deep search returned no results.', searchError);
-            fetchError = "File not found in storage (Deep Search failed)";
+            fetchError = "File not found in storage";
           }
         }
 
-        // --- Generate Download URL for whatever path worked ---
         if (finalViewUrl) {
           const { data: dlData } = await supabase.storage
             .from(bucketName)
@@ -134,7 +133,6 @@ export const CandidateProfileView = ({ candidate, onBack }: { candidate: Candida
         }
 
       } catch (err: any) {
-        console.error("[ResumeFetch] Critical Exception:", err);
         if (isMounted) setUrlError(err.message || "Unexpected error");
       } finally {
         if (isMounted) setLoadingUrl(false);
@@ -168,13 +166,15 @@ export const CandidateProfileView = ({ candidate, onBack }: { candidate: Candida
     document.body.removeChild(element);
   };
 
-  // --- Zoom & Page Handlers ---
-  const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 25, 200));
-  const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 25, 50));
-  const handleZoomReset = () => setZoomLevel(100);
+  const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
+    setNumPages(numPages);
+    setPageNumber(1);
+    setPdfError(null);
+  }, []);
 
-  const handlePageNext = () => setPdfPage(prev => prev + 1);
-  const handlePagePrev = () => setPdfPage(prev => Math.max(prev - 1, 1));
+  const onDocumentLoadError = useCallback(() => {
+    setPdfError("Could not render this PDF. Try downloading it instead.");
+  }, []);
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
@@ -197,7 +197,6 @@ export const CandidateProfileView = ({ candidate, onBack }: { candidate: Candida
               </div>
             </div>
 
-            {/* Contact & Role Details */}
             <div className="space-y-2 mb-6 border-b border-slate-100 pb-6">
               {candidate.position_applied && (
                 <div className="flex items-start text-sm text-slate-700">
@@ -230,13 +229,11 @@ export const CandidateProfileView = ({ candidate, onBack }: { candidate: Candida
             <div className="space-y-6">
               <h3 className="text-sm font-bold text-slate-900 flex items-center border-b border-slate-100 pb-2">
                 <Award className="w-4 h-4 mr-2 text-indigo-600" />
-                AI Evaluation Matrix
+                Screening Score
               </h3>
 
-              <div className="grid grid-cols-3 gap-2">
-                <ScoreCircle score={candidate.skills_score} label="Technical" />
-                <ScoreCircle score={candidate.experience_score} label="Experience" />
-                <ScoreCircle score={candidate.cultural_fit_score} label="Cultural" />
+              <div className="flex justify-center">
+                <ScoreCircle score={candidate.screening_score} label="Screening" />
               </div>
 
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
@@ -273,84 +270,41 @@ export const CandidateProfileView = ({ candidate, onBack }: { candidate: Candida
 
         {/* Resume Preview */}
         <div className="lg:w-2/3">
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm h-[800px] flex flex-col relative">
-
+          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col" style={{ minHeight: '800px' }}>
             {/* Toolbar */}
             <div className="bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-between shadow-sm z-10 shrink-0 h-12">
-              <div className="flex items-center space-x-1">
-                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mr-3 hidden sm:block">Preview</h3>
-                <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide hidden sm:block">Resume Preview</h3>
+              {numPages && numPages > 1 && (
+                <div className="flex items-center space-x-2 ml-auto">
                   <button
-                    onClick={handlePagePrev}
-                    disabled={pdfPage <= 1}
-                    className="p-1 hover:bg-white rounded-md text-slate-500 hover:text-indigo-600 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
-                    title="Previous Page"
+                    onClick={() => setPageNumber(p => Math.max(1, p - 1))}
+                    disabled={pageNumber <= 1}
+                    className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30 transition-colors"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <span className="text-xs font-mono font-bold text-slate-700 w-12 text-center select-none">
-                    Page {pdfPage}
+                  <span className="text-xs text-slate-500 font-medium">
+                    {pageNumber} / {numPages}
                   </span>
                   <button
-                    onClick={handlePageNext}
-                    className="p-1 hover:bg-white rounded-md text-slate-500 hover:text-indigo-600 transition-all"
-                    title="Next Page"
+                    onClick={() => setPageNumber(p => Math.min(numPages, p + 1))}
+                    disabled={pageNumber >= numPages}
+                    className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30 transition-colors"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
-                  <button
-                    onClick={handleZoomOut}
-                    className="p-1 hover:bg-white rounded-md text-slate-500 hover:text-indigo-600 transition-all"
-                    title="Zoom Out"
-                  >
-                    <Minus className="w-3.5 h-3.5" />
-                  </button>
-                  <span className="text-xs font-mono font-bold text-slate-700 w-12 text-center select-none">
-                    {zoomLevel}%
-                  </span>
-                  <button
-                    onClick={handleZoomIn}
-                    className="p-1 hover:bg-white rounded-md text-slate-500 hover:text-indigo-600 transition-all"
-                    title="Zoom In"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-                <button
-                  onClick={handleZoomReset}
-                  className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-700 transition-colors"
-                  title="Reset Zoom"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                </button>
-                <div className="w-px h-4 bg-slate-200 mx-1"></div>
-                {viewUrl && (
-                  <a
-                    href={viewUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-slate-400 hover:text-indigo-600 transition-colors p-1"
-                    title="Open in New Tab"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
-                )}
-              </div>
+              )}
             </div>
 
-            <div className="flex-1 bg-slate-100 overflow-auto relative">
+            <div ref={containerRef} className="flex-1 bg-slate-100 overflow-auto relative">
               {loadingUrl ? (
-                <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                <div className="w-full h-full min-h-[400px] flex flex-col items-center justify-center text-slate-400">
                   <Loader2 className="w-8 h-8 animate-spin mb-2" />
                   <p className="text-sm font-medium">Searching Secure Storage...</p>
                 </div>
               ) : urlError ? (
-                <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 p-8 text-center">
+                <div className="w-full h-full min-h-[400px] flex flex-col items-center justify-center text-slate-500 p-8 text-center">
                   <div className="bg-amber-100 p-3 rounded-full mb-4">
                     <AlertCircle className="w-8 h-8 text-amber-600" />
                   </div>
@@ -370,30 +324,43 @@ export const CandidateProfileView = ({ candidate, onBack }: { candidate: Candida
                   </button>
                 </div>
               ) : viewUrl ? (
-                <div className="w-full h-full flex flex-col items-center justify-center gap-4">
-                  <FileSearch className="w-12 h-12 text-indigo-200" />
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-slate-600 mb-4">Resume Preview</p>
-                    <div className="flex gap-3 justify-center flex-wrap">
-                      <button
-                        onClick={() => window.open(viewUrl, '_blank')}
-                        className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
-                      >
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        View Resume
-                      </button>
+                <div className="flex flex-col items-center py-4 px-2">
+                  {pdfError ? (
+                    <div className="flex flex-col items-center justify-center text-slate-500 p-8 text-center">
+                      <AlertCircle className="w-8 h-8 text-amber-600 mb-3" />
+                      <p className="text-sm text-slate-600 mb-4">{pdfError}</p>
                       <button
                         onClick={handleResumeDownload}
-                        className="inline-flex items-center px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors text-sm font-medium"
+                        disabled={!downloadUrl}
+                        className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition-colors disabled:opacity-50"
                       >
                         <Download className="w-4 h-4 mr-2" />
-                        Download
+                        Download PDF
                       </button>
                     </div>
-                  </div>
+                  ) : (
+                    <Document
+                      file={viewUrl}
+                      onLoadSuccess={onDocumentLoadSuccess}
+                      onLoadError={onDocumentLoadError}
+                      loading={
+                        <div className="flex flex-col items-center justify-center py-16 text-slate-400">
+                          <Loader2 className="w-8 h-8 animate-spin mb-2" />
+                          <p className="text-sm font-medium">Rendering PDF...</p>
+                        </div>
+                      }
+                    >
+                      <Page
+                        pageNumber={pageNumber}
+                        width={containerWidth > 16 ? containerWidth - 16 : containerWidth}
+                        renderTextLayer={true}
+                        renderAnnotationLayer={true}
+                      />
+                    </Document>
+                  )}
                 </div>
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                <div className="w-full h-full min-h-[400px] flex flex-col items-center justify-center text-slate-400">
                   <p className="text-sm font-medium">No resume document available.</p>
                 </div>
               )}

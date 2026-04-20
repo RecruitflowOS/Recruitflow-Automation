@@ -101,7 +101,7 @@ export const CampaignsView = ({ onSelectCandidate, tableName, campaignTitle }: C
       "====================================================\n\n" +
       top10.map((c, i) =>
         `RANK #${i+1}: ${c.full_name}\n` +
-        `Total Score: ${c.total_score}%\n` +
+        `Total Score: ${c.screening_score}%\n` +
         `Status: ${c.status}\n` +
         (c.position_applied ? `Position Applied: ${c.position_applied}\n` : '') +
         `Email: ${c.email}\n` +
@@ -247,9 +247,9 @@ export const CampaignsView = ({ onSelectCandidate, tableName, campaignTitle }: C
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col items-center">
-                        <span className="text-sm font-bold text-indigo-600">{candidate.total_score}%</span>
+                        <span className="text-sm font-bold text-indigo-600">{candidate.screening_score}%</span>
                         <div className="w-24 bg-slate-100 rounded-full h-1.5 mt-1 overflow-hidden">
-                          <div className="h-full rounded-full bg-indigo-600" style={{ width: `${candidate.total_score}%` }}></div>
+                          <div className="h-full rounded-full bg-indigo-600" style={{ width: `${candidate.screening_score}%` }}></div>
                         </div>
                       </div>
                     </td>

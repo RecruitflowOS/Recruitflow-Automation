@@ -32,11 +32,8 @@ export interface Candidate {
   full_name: string;
   email: string;
   phone: string;
-  total_score: number;
+  screening_score: number;
   status: QualificationStatus;
-  skills_score: number;
-  experience_score: number;
-  cultural_fit_score: number;
   summary: string;
   resume_path: string | null;
   reports?: string;
@@ -64,14 +61,11 @@ export const mapCandidate = (item: any): Candidate => ({
   full_name: item.full_name,
   email: item.email || 'N/A',
   phone: item.phone || 'N/A',
-  total_score: item.screening_score ?? 0,
+  screening_score: item.screening_score ?? 0,
   status: normalizeStatus(item.screening_status),
   resume_path: item.resume_url ? item.resume_url.trim() : null,
   reports: item.screening_report,
   summary: item.screening_summary || 'No summary available.',
-  skills_score: item.screening_score ?? 0,
-  experience_score: item.screening_score ?? 0,
-  cultural_fit_score: item.screening_score ?? 0,
   position_applied: item.position_applied || undefined,
   nationality: item.nationality || undefined,
   current_city: item.current_city || undefined,
