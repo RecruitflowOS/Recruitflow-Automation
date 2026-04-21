@@ -54,12 +54,6 @@ const App = () => {
       setProfileLoading(true);
 
       if (authUser) {
-        const { data: profile } = await supabase
-          .from('users')
-          .select('id, email, company_name')
-          .eq('id', authUser.id)
-          .single();
-
         const emailCompany = authUser.email ? EMAIL_TO_COMPANY[authUser.email] : null;
         if (emailCompany) {
           setUserProfile({
@@ -68,6 +62,11 @@ const App = () => {
             company_name: emailCompany,
           });
         } else {
+          const { data: profile } = await supabase
+            .from('users')
+            .select('id, email, company_name')
+            .eq('id', authUser.id)
+            .single();
           setUserProfile(profile || null);
         }
       } else {

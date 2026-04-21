@@ -22,7 +22,7 @@ import { supabase, Candidate } from '@/types';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ScoreCircle } from '@/components/ScoreCircle';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 export const CandidateProfileView = ({ candidate, onBack }: { candidate: Candidate, onBack: () => void }) => {
   const [viewUrl, setViewUrl] = useState<string | null>(null);
